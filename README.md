@@ -109,6 +109,11 @@ git push -u origin main
 - JavaScript ES Modules
 - Node.js built-in test runner
 - GitHub Pages
+- Vercel static deployment
 - PWA manifest / Service Worker
 
 Next.js化する場合は、十分な空き容量を確保してから App Router 構成へ移植してください。この版は、まずGitHub Pagesで確実に公開できることを優先しています。
+
+## Vercelで公開する場合
+
+`vercel.json` で `outputDirectory` を `dist` に設定しています。Vercel側で再デプロイすれば、`npm run build` 後に生成される `dist/` が公開されます。
