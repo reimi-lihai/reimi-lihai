@@ -1,0 +1,32 @@
+{
+  "name": "株式会社麗海 民泊予約",
+  "short_name": "麗海",
+  "description": "株式会社麗海の民泊予約を中心にした公式Webアプリ",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "browser"],
+  "background_color": "#061323",
+  "theme_color": "#061323",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "./assets/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "宿泊予約",
+      "url": "./booking.html",
+      "description": "宿泊予約を開始"
+    },
+    {
+      "name": "予約確認",
+      "url": "./reservation.html",
+      "description": "予約番号を確認"
+    }
+  ]
+}
