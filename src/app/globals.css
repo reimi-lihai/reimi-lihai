@@ -1,0 +1,175 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  Design tokens — "和モダン × ハイテク"
+  Primary palette per brief: 青 (blue) / 白 (white) / 黄 (yellow), with GOLD used
+  sparingly, and CRIMSON reserved for small alerts / emphasis only.
+  Everything is a CSS variable so re-theming and dark mode live in one place.
+*/
+:root {
+  --font-sans: "Inter", "Noto Sans JP";
+  --font-serif: "Noto Serif JP";
+
+  /* rgb triplets so tailwind `<alpha-value>` works */
+  --c-ink: 15 32 60;          /* near-navy text */
+  --c-surface: 246 250 255;   /* airy off-white ground */
+  --c-panel: 255 255 255;     /* card / glass base */
+  --c-line: 210 224 240;      /* hairline */
+  --c-muted: 96 116 146;      /* secondary text */
+
+  --c-brand: 20 108 214;      /* primary blue */
+  --c-brand-soft: 96 170 244; /* light blue */
+  --c-brand-deep: 12 40 92;   /* deep sea navy */
+
+  --c-gold: 214 168 74;       /* refined gold (used sparingly) */
+  --c-gold-soft: 240 214 150;
+
+  --c-crimson: 200 42 58;     /* small alerts / emphasis only */
+
+  --bg-kumiko:
+    repeating-linear-gradient(45deg, rgb(var(--c-brand) / 0.04) 0 1px, transparent 1px 22px),
+    repeating-linear-gradient(-45deg, rgb(var(--c-brand) / 0.04) 0 1px, transparent 1px 22px);
+  --bg-water:
+    radial-gradient(1200px 500px at 70% -10%, rgb(var(--c-brand-soft) / 0.35), transparent 60%),
+    radial-gradient(900px 500px at 0% 10%, rgb(var(--c-brand) / 0.16), transparent 55%);
+
+  color-scheme: light;
+}
+
+:root.dark {
+  --c-ink: 233 240 250;
+  --c-surface: 8 16 33;
+  --c-panel: 16 26 48;
+  --c-line: 40 58 92;
+  --c-muted: 150 170 200;
+
+  --c-brand: 74 154 255;
+  --c-brand-soft: 120 186 255;
+  --c-brand-deep: 4 12 30;
+
+  --c-gold: 226 186 104;
+  --c-gold-soft: 240 214 150;
+
+  --c-crimson: 240 96 110;
+
+  --bg-water:
+    radial-gradient(1200px 520px at 72% -12%, rgb(var(--c-brand) / 0.28), transparent 60%),
+    radial-gradient(900px 520px at -5% 8%, rgb(var(--c-brand-deep) / 0.6), transparent 55%);
+  color-scheme: dark;
+}
+
+* {
+  border-color: rgb(var(--c-line));
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background:
+    var(--bg-water),
+    rgb(var(--c-surface));
+  color: rgb(var(--c-ink));
+  font-family: var(--font-sans), "Hiragino Kaku Gothic ProN", "Meiryo", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100dvh;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ---- Reusable component classes ---- */
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6;
+  }
+
+  .glass {
+    background: linear-gradient(
+      180deg,
+      rgb(var(--c-panel) / 0.9),
+      rgb(var(--c-panel) / 0.72)
+    );
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgb(var(--c-line) / 0.9);
+    box-shadow: 0 8px 40px -18px rgb(var(--c-brand-deep) / 0.35);
+  }
+
+  .gold-hairline {
+    border: 1px solid rgb(var(--c-gold) / 0.5);
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold
+           transition-all duration-200 focus-visible:outline-none focus-visible:ring-2
+           disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn text-white shadow-lg;
+    background-image: linear-gradient(120deg, rgb(var(--c-brand-deep)), rgb(var(--c-brand)));
+  }
+  .btn-primary:hover:not(:disabled) {
+    box-shadow: 0 12px 30px -10px rgb(var(--c-brand) / 0.6);
+    transform: translateY(-1px);
+  }
+  .btn-gold {
+    @apply btn text-brand-deep;
+    background-image: linear-gradient(120deg, rgb(var(--c-gold-soft)), rgb(var(--c-gold)));
+  }
+  .btn-outline {
+    @apply btn border bg-transparent text-ink;
+    border-color: rgb(var(--c-brand) / 0.4);
+  }
+  .btn-outline:hover:not(:disabled) {
+    background: rgb(var(--c-brand) / 0.08);
+  }
+
+  .card {
+    @apply glass rounded-2xl overflow-hidden;
+  }
+
+  .field-label {
+    @apply mb-1.5 block text-sm font-medium text-ink;
+  }
+  .field {
+    @apply w-full rounded-lg border bg-panel/80 px-3.5 py-2.5 text-sm text-ink outline-none
+           transition placeholder:text-muted;
+    border-color: rgb(var(--c-line));
+  }
+  .field:focus {
+    border-color: rgb(var(--c-brand));
+    box-shadow: 0 0 0 3px rgb(var(--c-brand) / 0.15);
+  }
+  .field-error {
+    border-color: rgb(var(--c-crimson)) !important;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium;
+    border-color: rgb(var(--c-line));
+  }
+
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.2em] text-brand;
+  }
+}
+
+/* focus ring default */
+:focus-visible {
+  outline: 2px solid rgb(var(--c-brand));
+  outline-offset: 2px;
+}
+
+/* thin scrollbars in chat */
+.thin-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+.thin-scroll::-webkit-scrollbar-thumb { background: rgb(var(--c-line)); border-radius: 999px; }
