@@ -53,12 +53,12 @@ export function LanguageSelector({
         aria-label={t("common.selectLanguage")}
         className={
           prominent
-            ? "btn-gold shadow-gold"
-            : "inline-flex items-center gap-1.5 rounded-lg border border-line bg-panel/70 px-3 py-2 text-sm font-medium text-ink transition hover:border-brand/50"
+            ? "btn-gold whitespace-nowrap shadow-gold"
+            : "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-line bg-panel/70 px-3 py-2 text-sm font-medium text-ink transition hover:border-brand/50"
         }
       >
-        <Globe className="h-4 w-4" aria-hidden />
-        <span>{LOCALE_META[locale].label}</span>
+        <Globe className="h-4 w-4 shrink-0" aria-hidden />
+        <span className="whitespace-nowrap">{LOCALE_META[locale].label}</span>
         <ChevronDown className={`h-4 w-4 transition ${open ? "rotate-180" : ""}`} aria-hidden />
       </button>
 

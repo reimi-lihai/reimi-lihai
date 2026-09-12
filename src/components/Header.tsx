@@ -32,7 +32,7 @@ export function Header() {
                 key={item.href}
                 href={item.href}
                 aria-current={active ? "page" : undefined}
-                className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
+                className={`whitespace-nowrap rounded-lg px-2.5 py-2 text-sm font-medium transition ${
                   active ? "text-brand" : "text-ink/80 hover:text-brand"
                 }`}
               >
@@ -42,13 +42,13 @@ export function Header() {
           })}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <div className="hidden sm:block">
             <ThemeToggle />
           </div>
           {/* Language selector — always visible & easy to reach */}
           <LanguageSelector />
-          <Link href="/stays" className="btn-primary hidden md:inline-flex">
+          <Link href="/stays" className="btn-primary hidden whitespace-nowrap xl:inline-flex">
             {t("common.startBooking")}
           </Link>
           <button
