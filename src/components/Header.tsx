@@ -17,7 +17,10 @@ export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-line/70 bg-surface/80 backdrop-blur-xl">
+    <header
+      className="sticky top-0 z-50 border-b border-line/70 bg-surface/85 backdrop-blur-xl"
+      style={{ paddingTop: "env(safe-area-inset-top)" }}
+    >
       <div className="container-page flex h-16 items-center justify-between gap-3">
         <Logo />
 

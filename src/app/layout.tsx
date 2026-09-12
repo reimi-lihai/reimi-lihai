@@ -24,7 +24,9 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    // "default" keeps the iOS status bar opaque so it never overlaps the header
+    // (the header also reserves env(safe-area-inset-top) for notch devices).
+    statusBarStyle: "default",
     title: "麗海 REIKAI",
   },
   openGraph: {
