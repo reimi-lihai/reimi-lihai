@@ -11,7 +11,7 @@ export function Logo({ className = "" }: { className?: string }) {
     <Link
       href="/"
       className={`inline-flex items-center ${className}`}
-      aria-label="株式会社麗海 REIKAI — ホーム"
+      aria-label="株式会社麗海 REIMI — ホーム"
     >
       {/* Icon mark — always visible */}
       <span className="relative block h-10 w-10 overflow-hidden rounded-xl shadow-sm ring-1 ring-line sm:h-11 sm:w-11">
@@ -29,7 +29,7 @@ export function Logo({ className = "" }: { className?: string }) {
         <span className="relative block h-full w-full">
           <Image
             src="/images/logo.png"
-            alt="株式会社麗海 REIKAI Co., Ltd."
+            alt="株式会社麗海 REIMI Co., Ltd."
             fill
             sizes="150px"
             className="object-contain"

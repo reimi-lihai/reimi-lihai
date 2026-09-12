@@ -2,7 +2,7 @@
   "name": "reikai-web",
   "version": "1.0.0",
   "private": true,
-  "description": "株式会社麗海 (REIKAI Co., Ltd.) — 民泊予約プラットフォーム / vacation rental booking platform",
+  "description": "株式会社麗海 (REIMI Co., Ltd.) — 民泊予約プラットフォーム / vacation rental booking platform",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

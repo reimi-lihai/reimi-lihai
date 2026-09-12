@@ -38,7 +38,7 @@ export const properties: Property[] = [
     ],
     highlights: [
       { ja: "民泊運用の実績ノウハウ", en: "Vacation-rental operating know-how" },
-      { ja: "麗海の管理サービス対応", en: "Covered by REIKAI management" },
+      { ja: "麗海の管理サービス対応", en: "Covered by REIMI management" },
     ],
     minpakuReady: true,
     accent: "212 84% 45%",

@@ -43,7 +43,7 @@ export function Footer() {
           <div className="mb-3 inline-block overflow-hidden rounded-lg bg-white/90 p-2 ring-1 ring-line">
             <Image
               src="/images/logo.png"
-              alt="株式会社麗海 REIKAI Co., Ltd."
+              alt="株式会社麗海 REIMI Co., Ltd."
               width={180}
               height={94}
               className="h-10 w-auto object-contain"

@@ -17,6 +17,7 @@ export const guestFormSchema = z.object({
   phone: phoneSchema,
   country: z.string().trim().min(1, "errors.required"),
   arrivalTime: z.string().optional(),
+  messagingId: z.string().max(100).optional(),
   notes: z.string().max(2000).optional(),
   agree: z.literal(true, { errorMap: () => ({ message: "booking.agreeRequired" }) }),
 });

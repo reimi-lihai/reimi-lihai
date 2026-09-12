@@ -2,8 +2,8 @@
 const ja = {
   brand: {
     name: "株式会社麗海",
-    nameEn: "REIKAI Co., Ltd.",
-    concept: "伝統の品格と、未来の使いやすさ。",
+    nameEn: "REIMI Co., Ltd.",
+    concept: "人と海と未来をつなぐ",
     message: "麗海の品格を、世界と事業の未来へ。",
     tagline: "大阪発。和モダンな民泊で、旅の一夜を上質に。",
   },
@@ -12,6 +12,7 @@ const ja = {
     searchStays: "宿泊施設を探す",
     searchProperties: "不動産を探す",
     consult: "サービスを相談する",
+    consultServices: "美容・医療・不動産探しなどのご相談も承ります。",
     startBooking: "予約を開始する",
     bookNow: "今すぐ予約",
     viewDetails: "詳細を見る",
@@ -55,7 +56,7 @@ const ja = {
   },
   home: {
     heroBadge: "民泊予約プラットフォーム",
-    heroTitle: "伝統の品格と、\n未来の使いやすさ。",
+    heroTitle: "人と海と未来をつなぐ",
     heroSubtitle: "大阪の和モダンな民泊を、サイト内で検索・予約・決済まで。旅の一夜を、上質に。",
     heroStat1: "厳選された宿",
     heroStat2: "多言語対応",
@@ -169,6 +170,9 @@ const ja = {
     backToStays: "宿泊施設に戻る",
     emptyCart: "予約対象が選択されていません。宿泊施設からプランをお選びください。",
     processing: "予約を処理しています…",
+    messagingId: "LINE / WeChat（微信）ID",
+    messagingIdPlaceholder: "任意（例：LINE ID / 微信ID）",
+    messagingNote: "美容・医療・不動産探しなどのご相談も承ります。",
   },
   payment: {
     title: "お支払い",
@@ -267,7 +271,7 @@ const ja = {
     otherPurposes: "その他の事業目的",
     values: {
       tradeName: "株式会社麗海",
-      tradeNameEn: "REIKAI Co., Ltd.",
+      tradeNameEn: "REIMI Co., Ltd.",
       address: "大阪市大正区三軒家西二丁目14番6号",
       ceo: "島尾 拓也",
       established: "令和8年8月18日（2026年8月18日）",
@@ -404,7 +408,7 @@ const ja = {
   meta: {
     homeTitle: "株式会社麗海 | 大阪の和モダン民泊 予約プラットフォーム",
     homeDesc:
-      "大阪の和モダンな民泊をサイト内で検索・予約・決済。多言語対応・サイト内チャット・オンライン本人確認まで。株式会社麗海（REIKAI Co., Ltd.）。",
+      "大阪の和モダンな民泊をサイト内で検索・予約・決済。多言語対応・サイト内チャット・オンライン本人確認まで。株式会社麗海（REIMI Co., Ltd.）。",
   },
 } as const;
 

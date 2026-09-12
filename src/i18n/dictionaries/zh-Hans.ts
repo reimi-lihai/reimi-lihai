@@ -4,8 +4,8 @@ import type { Dictionary } from "./_types";
 const zhHans: Dictionary = {
   brand: {
     name: "株式会社丽海",
-    nameEn: "REIKAI Co., Ltd.",
-    concept: "传统的品格，未来的易用。",
+    nameEn: "REIMI Co., Ltd.",
+    concept: "连接人、海洋与未来",
     message: "将丽海的品格，带向世界与事业的美好未来。",
     tagline: "源自大阪，以和风摩登民宿，成就旅途中一夜的质感。",
   },
@@ -14,6 +14,7 @@ const zhHans: Dictionary = {
     searchStays: "寻找住宿",
     searchProperties: "寻找房源",
     consult: "咨询服务",
+    consultServices: "还可咨询美容、医疗、房源寻找等服务。",
     startBooking: "开始预订",
     bookNow: "立即预订",
     viewDetails: "查看详情",
@@ -57,7 +58,7 @@ const zhHans: Dictionary = {
   },
   home: {
     heroBadge: "民宿预订平台",
-    heroTitle: "传统的品格，\n未来的易用。",
+    heroTitle: "连接人、海洋与未来",
     heroSubtitle: "在同一平台搜索、预订并付款，入住大阪的和风摩登民宿。让旅途中的一夜更有质感。",
     heroStat1: "精选住宿",
     heroStat2: "五种语言",
@@ -168,6 +169,9 @@ const zhHans: Dictionary = {
     backToStays: "返回住宿",
     emptyCart: "尚未选择住宿，请从住宿页面选择方案。",
     processing: "正在处理您的预订…",
+    messagingId: "LINE / 微信 ID",
+    messagingIdPlaceholder: "选填（例：LINE ID / 微信 ID）",
+    messagingNote: "还可咨询美容、医疗、房源寻找等服务。",
   },
   payment: {
     title: "付款",
@@ -265,7 +269,7 @@ const zhHans: Dictionary = {
     otherPurposes: "其他业务目的",
     values: {
       tradeName: "株式会社丽海",
-      tradeNameEn: "REIKAI Co., Ltd.",
+      tradeNameEn: "REIMI Co., Ltd.",
       address: "大阪市大正区三轩家西二丁目14番6号",
       ceo: "岛尾 拓也",
       established: "令和8年8月18日（2026年8月18日）",
@@ -398,7 +402,7 @@ const zhHans: Dictionary = {
   meta: {
     homeTitle: "株式会社丽海 | 大阪和风摩登民宿预订平台",
     homeDesc:
-      "在同一平台搜索、预订并付款入住大阪和风摩登民宿。多语言、站内聊天与在线身份验证。株式会社丽海（REIKAI Co., Ltd.）。",
+      "在同一平台搜索、预订并付款入住大阪和风摩登民宿。多语言、站内聊天与在线身份验证。株式会社丽海（REIMI Co., Ltd.）。",
   },
 };
 

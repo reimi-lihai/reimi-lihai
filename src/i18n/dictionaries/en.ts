@@ -3,10 +3,10 @@ import type { Dictionary } from "./_types";
 // English
 const en: Dictionary = {
   brand: {
-    name: "REIKAI Co., Ltd.",
-    nameEn: "REIKAI Co., Ltd.",
-    concept: "The grace of tradition, the ease of the future.",
-    message: "Carrying REIKAI's grace toward a brighter future — for the world and for business.",
+    name: "REIMI Co., Ltd.",
+    nameEn: "REIMI Co., Ltd.",
+    concept: "Connecting people, the ocean and a brighter future",
+    message: "Carrying REIMI's grace toward a brighter future — for the world and for business.",
     tagline: "From Osaka — refined nights in Japanese-modern vacation rentals.",
   },
   common: {
@@ -14,6 +14,7 @@ const en: Dictionary = {
     searchStays: "Find a stay",
     searchProperties: "Find a property",
     consult: "Ask about services",
+    consultServices: "We also help with beauty, medical and property-search consultations.",
     startBooking: "Start booking",
     bookNow: "Book now",
     viewDetails: "View details",
@@ -57,14 +58,14 @@ const en: Dictionary = {
   },
   home: {
     heroBadge: "Vacation rental booking platform",
-    heroTitle: "The grace of tradition,\nthe ease of the future.",
+    heroTitle: "Connecting people, the ocean and a brighter future",
     heroSubtitle: "Search, book and pay for Osaka's Japanese-modern vacation rentals — all in one place. Make your night away something special.",
     heroStat1: "Curated stays",
     heroStat2: "5 languages",
     heroStat3: "On-site payment",
-    aboutTitle: "About REIKAI",
+    aboutTitle: "About REIMI",
     aboutBody:
-      "REIKAI Co., Ltd. operates and manages vacation rentals and real estate from its base in Osaka. From planning to daily operations of inns, hotels, lodging houses and rentals, we support every stay — including guests visiting from overseas.",
+      "REIMI Co., Ltd. operates and manages vacation rentals and real estate from its base in Osaka. From planning to daily operations of inns, hotels, lodging houses and rentals, we support every stay — including guests visiting from overseas.",
     aboutLink: "See company profile",
     searchTitle: "Search stays",
     searchLead: "Just pick your dates and party size — we'll show what's available.",
@@ -77,7 +78,7 @@ const en: Dictionary = {
     inboundTitle: "Inbound support",
     inboundLead:
       "Support for medical and beauty travelers from overseas, and guidance on residence and stay.",
-    valuesTitle: "What REIKAI offers",
+    valuesTitle: "What REIMI offers",
     synergyTitle: "Where stays, real estate and inbound meet",
     synergyLead:
       "\"Stay\", \"own\" and \"live & visit\" through a single point of contact — supporting travel and life across our businesses.",
@@ -171,6 +172,9 @@ const en: Dictionary = {
     backToStays: "Back to stays",
     emptyCart: "No stay selected. Please choose a plan from a listing.",
     processing: "Processing your booking…",
+    messagingId: "LINE / WeChat ID",
+    messagingIdPlaceholder: "Optional (e.g. LINE ID / WeChat ID)",
+    messagingNote: "We also help with beauty, medical and property-search consultations.",
   },
   payment: {
     title: "Payment",
@@ -258,7 +262,7 @@ const en: Dictionary = {
   },
   company: {
     title: "Company profile",
-    lead: "Corporate information for REIKAI Co., Ltd.",
+    lead: "Corporate information for REIMI Co., Ltd.",
     tradeName: "Trade name",
     tradeNameEn: "English name",
     address: "Head office",
@@ -269,7 +273,7 @@ const en: Dictionary = {
     otherPurposes: "Other business purposes",
     values: {
       tradeName: "株式会社麗海",
-      tradeNameEn: "REIKAI Co., Ltd.",
+      tradeNameEn: "REIMI Co., Ltd.",
       address: "2-14-6 Sangenya-nishi, Taisho-ku, Osaka",
       ceo: "Takuya Shimao",
       established: "August 18, 2026 (Reiwa 8)",
@@ -329,7 +333,7 @@ const en: Dictionary = {
   },
   chat: {
     launcher: "Chat with us",
-    title: "REIKAI Support",
+    title: "REIMI Support",
     subtitle: "Talk directly with our staff",
     placeholder: "Type a message…",
     send: "Send",
@@ -342,7 +346,7 @@ const en: Dictionary = {
     startPrompt: "Pick a topic and we'll deliver it straight to our staff.",
     noTranslateNote: "Messages are delivered exactly as typed — never translated.",
     unread: "{n} unread",
-    agentName: "REIKAI Support",
+    agentName: "REIMI Support",
     autoReply:
       "We've received your message. Our staff will reply in turn (automated demo response).",
     cat: {
@@ -404,9 +408,9 @@ const en: Dictionary = {
     backHome: "Back to home",
   },
   meta: {
-    homeTitle: "REIKAI Co., Ltd. | Japanese-modern vacation rentals in Osaka",
+    homeTitle: "REIMI Co., Ltd. | Japanese-modern vacation rentals in Osaka",
     homeDesc:
-      "Search, book and pay for Japanese-modern vacation rentals in Osaka. Multilingual, on-site chat and online check-in. REIKAI Co., Ltd. (株式会社麗海).",
+      "Search, book and pay for Japanese-modern vacation rentals in Osaka. Multilingual, on-site chat and online check-in. REIMI Co., Ltd. (株式会社麗海).",
   },
 };
 

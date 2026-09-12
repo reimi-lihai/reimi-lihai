@@ -13,7 +13,7 @@ import { PriceBreakdown } from "./PriceBreakdown";
 import { PaymentForm } from "./PaymentForm";
 import { ErrorState } from "@/components/ui/states";
 import type { Accommodation, BookingDraft } from "@/lib/types";
-import { CalendarDays, Users, XCircle, ArrowLeft } from "lucide-react";
+import { CalendarDays, Users, XCircle, ArrowLeft, MessageCircle } from "lucide-react";
 
 type Errors = Partial<Record<string, string>>;
 
@@ -37,6 +37,7 @@ export function BookingFlow({
     phone: "",
     country: "",
     arrivalTime: "",
+    messagingId: "",
     notes: "",
     agree: false,
   });
@@ -98,6 +99,7 @@ export function BookingFlow({
             email: guest.email,
             phone: guest.phone,
             country: guest.country,
+            messagingId: guest.messagingId,
           },
           simulate,
         }),
@@ -160,7 +162,19 @@ export function BookingFlow({
                 <Field label={t("booking.arrivalTime")}>
                   <input type="time" className="field" value={guest.arrivalTime} onChange={(e) => setGuest({ ...guest, arrivalTime: e.target.value })} />
                 </Field>
+                <Field label={`${t("booking.messagingId")}（${t("common.optional")}）`}>
+                  <input
+                    className="field"
+                    value={guest.messagingId}
+                    placeholder={t("booking.messagingIdPlaceholder")}
+                    onChange={(e) => setGuest({ ...guest, messagingId: e.target.value })}
+                  />
+                </Field>
               </div>
+              <p className="mt-2 flex items-start gap-1.5 rounded-lg bg-brand/5 p-2.5 text-xs text-muted">
+                <MessageCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-brand" aria-hidden />
+                {t("booking.messagingNote")}
+              </p>
               <Field label={t("booking.notes")}>
                 <textarea className="field min-h-24" value={guest.notes} placeholder={t("booking.notesPlaceholder")} onChange={(e) => setGuest({ ...guest, notes: e.target.value })} />
               </Field>

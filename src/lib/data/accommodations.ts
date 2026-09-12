@@ -407,7 +407,7 @@ export const accommodations: Accommodation[] = [
     },
     description: {
       ja: "東山のふもと、川辺に佇む数寄屋づくりの別邸。檜の露天風呂と静かな庭で、非日常のひとときを。麗海が手がける最上級の滞在です。",
-      en: "A sukiya-style villa by the river at the foot of Higashiyama. A hinoki open-air bath and a quiet garden offer an escape from the everyday — REIKAI's finest stay.",
+      en: "A sukiya-style villa by the river at the foot of Higashiyama. A hinoki open-air bath and a quiet garden offer an escape from the everyday — REIMI's finest stay.",
     },
     maxGuests: 5,
     bedrooms: 2,
@@ -429,7 +429,7 @@ export const accommodations: Accommodation[] = [
     highlights: [
       { ja: "川辺の露天風呂", en: "Riverside open-air bath" },
       { ja: "祇園まで徒歩15分", en: "15 min walk to Gion" },
-      { ja: "麗海プレミアム", en: "REIKAI Premium" },
+      { ja: "麗海プレミアム", en: "REIMI Premium" },
     ],
     houseRules: [
       { ja: "禁煙", en: "No smoking" },

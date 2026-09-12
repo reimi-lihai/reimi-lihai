@@ -27,7 +27,7 @@ export default function CompanyPage() {
       <Reveal>
         <div className="mt-8 grid items-center gap-6 rounded-2xl bg-gradient-to-br from-brand-deep to-brand p-8 text-white sm:grid-cols-[auto_1fr]">
           <div className="inline-block overflow-hidden rounded-xl bg-white/95 p-3">
-            <Image src="/images/logo.png" alt="株式会社麗海 REIKAI Co., Ltd." width={200} height={104} className="h-14 w-auto object-contain" />
+            <Image src="/images/logo.png" alt="株式会社麗海 REIMI Co., Ltd." width={200} height={104} className="h-14 w-auto object-contain" />
           </div>
           <div>
             <p className="text-sm uppercase tracking-[0.2em] text-gold-soft">{t("company.conceptTitle")}</p>

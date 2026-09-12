@@ -4,8 +4,8 @@ import type { Dictionary } from "./_types";
 const ko: Dictionary = {
   brand: {
     name: "주식회사 레이카이",
-    nameEn: "REIKAI Co., Ltd.",
-    concept: "전통의 품격, 미래의 편리함.",
+    nameEn: "REIMI Co., Ltd.",
+    concept: "사람과 바다와 미래를 잇다",
     message: "레이카이의 품격을 세계와 사업의 밝은 미래로.",
     tagline: "오사카에서. 재패니즈 모던 민박으로, 여행의 하룻밤을 품격 있게.",
   },
@@ -14,6 +14,7 @@ const ko: Dictionary = {
     searchStays: "숙소 찾기",
     searchProperties: "매물 찾기",
     consult: "서비스 상담",
+    consultServices: "미용·의료·부동산 탐색 등의 상담도 가능합니다.",
     startBooking: "예약 시작",
     bookNow: "지금 예약",
     viewDetails: "상세 보기",
@@ -57,7 +58,7 @@ const ko: Dictionary = {
   },
   home: {
     heroBadge: "민박 예약 플랫폼",
-    heroTitle: "전통의 품격,\n미래의 편리함.",
+    heroTitle: "사람과 바다와 미래를 잇다",
     heroSubtitle: "오사카의 재패니즈 모던 민박을 한 곳에서 검색·예약·결제까지. 여행의 하룻밤을 품격 있게.",
     heroStat1: "엄선된 숙소",
     heroStat2: "5개 언어",
@@ -168,6 +169,9 @@ const ko: Dictionary = {
     backToStays: "숙소로 돌아가기",
     emptyCart: "선택된 숙소가 없습니다. 숙소 페이지에서 플랜을 선택해 주세요.",
     processing: "예약을 처리하고 있습니다…",
+    messagingId: "LINE / WeChat(微信) ID",
+    messagingIdPlaceholder: "선택 (예: LINE ID / 微信 ID)",
+    messagingNote: "미용·의료·부동산 탐색 등의 상담도 가능합니다.",
   },
   payment: {
     title: "결제",
@@ -265,7 +269,7 @@ const ko: Dictionary = {
     otherPurposes: "기타 사업 목적",
     values: {
       tradeName: "株式会社麗海",
-      tradeNameEn: "REIKAI Co., Ltd.",
+      tradeNameEn: "REIMI Co., Ltd.",
       address: "오사카시 다이쇼구 산겐야니시 2가 14-6",
       ceo: "시마오 다쿠야",
       established: "레이와 8년 8월 18일 (2026년 8월 18일)",
@@ -398,7 +402,7 @@ const ko: Dictionary = {
   meta: {
     homeTitle: "주식회사 레이카이 | 오사카 재패니즈 모던 민박 예약 플랫폼",
     homeDesc:
-      "오사카의 재패니즈 모던 민박을 한 곳에서 검색·예약·결제. 다국어·사이트 내 채팅·온라인 본인 확인까지. 주식회사 레이카이(REIKAI Co., Ltd.).",
+      "오사카의 재패니즈 모던 민박을 한 곳에서 검색·예약·결제. 다국어·사이트 내 채팅·온라인 본인 확인까지. 주식회사 레이카이(REIMI Co., Ltd.).",
   },
 };
 

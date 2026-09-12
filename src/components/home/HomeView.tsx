@@ -206,6 +206,7 @@ export function HomeView({
           <div className="relative">
             <h2 className="font-serif text-2xl font-bold sm:text-3xl">{t("home.ctaTitle")}</h2>
             <p className="mx-auto mt-3 max-w-xl text-white/90">{t("home.ctaLead")}</p>
+            <p className="mx-auto mt-2 max-w-xl text-sm text-gold-soft">{t("common.consultServices")}</p>
             <div className="mt-6 flex flex-wrap justify-center gap-3">
               <Link href="/stays" className="btn-gold">
                 {t("common.searchStays")}

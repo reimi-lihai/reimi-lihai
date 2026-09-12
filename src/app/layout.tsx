@@ -12,11 +12,11 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: "株式会社麗海 | 大阪の和モダン民泊 予約プラットフォーム",
-    template: "%s | 株式会社麗海 REIKAI",
+    template: "%s | 株式会社麗海 REIMI",
   },
   description:
-    "大阪の和モダンな民泊をサイト内で検索・予約・決済。多言語対応・サイト内チャット・オンライン本人確認まで。株式会社麗海（REIKAI Co., Ltd.）。",
-  applicationName: "麗海 REIKAI",
+    "大阪の和モダンな民泊をサイト内で検索・予約・決済。多言語対応・サイト内チャット・オンライン本人確認まで。株式会社麗海（REIMI Co., Ltd.）。",
+  applicationName: "麗海 REIMI",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
@@ -27,11 +27,11 @@ export const metadata: Metadata = {
     // "default" keeps the iOS status bar opaque so it never overlaps the header
     // (the header also reserves env(safe-area-inset-top) for notch devices).
     statusBarStyle: "default",
-    title: "麗海 REIKAI",
+    title: "麗海 REIMI",
   },
   openGraph: {
     type: "website",
-    siteName: "株式会社麗海 REIKAI",
+    siteName: "株式会社麗海 REIMI",
     title: "株式会社麗海 | 大阪の和モダン民泊 予約プラットフォーム",
     description:
       "大阪の和モダンな民泊をサイト内で検索・予約・決済。多言語・サイト内チャット・オンライン本人確認。",
