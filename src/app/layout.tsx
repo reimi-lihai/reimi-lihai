@@ -4,6 +4,7 @@ import { I18nProvider } from "@/i18n/I18nProvider";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ChatLauncher } from "@/components/chat/ChatLauncher";
+import { MobileTabBar } from "@/components/MobileTabBar";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -75,7 +76,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Header />
           <main id="main">{children}</main>
           <Footer />
+          {/* Clearance so the fixed mobile tab bar never covers footer content */}
+          <div className="h-[76px] lg:hidden" aria-hidden />
           <ChatLauncher />
+          <MobileTabBar />
         </I18nProvider>
       </body>
     </html>

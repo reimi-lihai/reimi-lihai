@@ -16,7 +16,7 @@ export function ChatLauncher() {
         <button
           type="button"
           onClick={() => chatStore.open()}
-          className="btn-primary fixed bottom-4 right-4 z-[70] h-14 gap-2 rounded-full !px-5 shadow-glass sm:bottom-6 sm:right-6"
+          className="btn-primary fixed bottom-6 right-6 z-[70] hidden h-14 gap-2 rounded-full !px-5 shadow-glass lg:inline-flex"
           aria-label={t("chat.launcher")}
           aria-haspopup="dialog"
         >

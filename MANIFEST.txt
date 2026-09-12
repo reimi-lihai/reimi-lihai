@@ -60,6 +60,7 @@
 ./src/components/LanguageSelector.tsx
 ./src/components/Logo.tsx
 ./src/components/MobileNav.tsx
+./src/components/MobileTabBar.tsx
 ./src/components/PropertyCard.tsx
 ./src/components/SearchBookingForm.tsx
 ./src/components/ThemeToggle.tsx
