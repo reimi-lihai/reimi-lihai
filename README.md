@@ -191,3 +191,71 @@ Stripe 未設定時はデモ決済（成功/失敗をボタンで確認）で全
 ---
 
 © 株式会社麗海（REIMI Co., Ltd.）  —  麗海の品格を、世界と事業の未来へ。
+
+---
+
+## バックエンド / 管理画面（P0 + ゲストキー）
+
+`npm run dev` → http://localhost:3000/admin にアクセスすると、**設定ゼロで**組み込み PostgreSQL（PGlite, `.data/pglite`）が起動し、マイグレーションとデモデータ投入が自動で行われます。
+
+| デモアカウント | 権限 | 表示タイムゾーン |
+| --- | --- | --- |
+| master@reimi.example | マスター（全権限） | Asia/Tokyo |
+| osaka@reimi.example | 通常管理者 | Asia/Tokyo |
+| toronto@reimi.example | 通常管理者（予約閲覧・チャット・キー・タスク） | America/Toronto |
+
+パスワードはすべて `reimi-demo-2026`（ログイン画面のボタンでも入れます）。
+
+ゲストキーのデモ：`/key/demo`（姓 Chen）、`/key/demo-upcoming`、`/key/demo-expired`。管理画面の予約詳細から新しいキーを発行すると、QR と URL がその場で作られます。
+
+### 構成
+
+```
+src/server/
+  db/schema.ts          テーブル定義（Drizzle）
+  db/migrations/        SQL マイグレーション（0001 = 二重予約防止の排他制約・監査ログ追記専用トリガー）
+  db/client.ts          DATABASE_URL があれば Supabase、なければ組み込みDB
+  db/seed.ts            デモデータ
+  auth/                 セッション・パスワード・権限（RBAC）
+  modules/              keys（ゲストキー）, reservations（清掃タスク連動）, queries（画面用の読み取り）
+  audit.ts / time.ts / rateLimit.ts
+src/app/api/admin/*     管理 REST API（すべて権限チェック＋監査ログ）
+src/app/api/guest/key/* ゲストキー API
+src/app/admin/*         管理画面
+```
+
+### 本番（Supabase）へ切り替える
+
+手順の詳細は [`supabase/README.md`](supabase/README.md)。概要：
+
+1. Supabase で東京リージョンのプロジェクトを作成
+2. SQL Editor に `supabase/setup.sql` を貼り付けて Run（テーブル・制約・RLS を作成）
+3. Vercel の環境変数に `DATABASE_URL`（Transaction pooler の URI）・`KEY_SESSION_SECRET`・`ADMIN_BOOTSTRAP_EMAIL`・`ADMIN_BOOTSTRAP_PASSWORD` を設定して再デプロイ
+4. 最初のマスターでログインしたら `ADMIN_BOOTSTRAP_PASSWORD` を削除
+5. （今後）管理者ログインを Supabase Auth ＋ TOTP に差し替え（`src/server/auth/session.ts` のみ）
+
+スキーマを変更したら `npm run db:generate` → `npm run db:supabase-sql` で setup.sql を再生成するか、`npm run db:migrate` で差分だけ適用します。
+
+| コマンド | 内容 |
+| --- | --- |
+| `npm run db:generate` | schema.ts の変更からマイグレーション生成 |
+| `npm run db:migrate` | DATABASE_URL の DB に適用 |
+| `npm run db:reset` | 組み込みDBを消去（次回起動時にデモデータ再投入） |
+
+---
+
+## 予約・料金・決済（P1）
+
+| 機能 | 場所 |
+| --- | --- |
+| 料金エンジン（曜日・シーズン・期間・連泊・直前/早割・人数のルール＋日別の個別料金・販売停止） | `src/server/modules/pricing-engine.ts`（単体テスト `npm test`） |
+| 見積もり・空室・仮押さえ→決済→確定、キャンセル料計算、返金 | `src/server/modules/booking.ts` |
+| 公開 API | `POST /api/v1/quotes`、`GET /api/v1/stays/:id/calendar`、`POST /api/v1/reservations`、`GET /api/v1/reservations/status` |
+| Stripe Webhook（署名検証・重複受信は無視） | `POST /api/webhooks/stripe` |
+| 期限切れ仮押さえの解放（毎日＋空室確認のたび） | `GET /api/cron/expire-holds`（`vercel.json`） |
+| 管理画面 | 料金カレンダー `/admin/pricing`、売上・CSV `/admin/sales`、予約詳細のキャンセル・返金 |
+
+- 予約の流れ：空室と料金をサーバーで再計算 → 30分の仮押さえ → Stripe でカード決済 → Webhook で確定＋清掃タスク自動作成
+- 同じ部屋・同じ日程への同時予約は DB の排他制約で1件だけが通ります
+- キャンセル料（既定値）：14日前まで無料／7〜13日前 30%／2〜6日前 60%／前日・当日 100%。管理画面「設定」でマスターが変更でき、公開サイトのキャンセルポリシーページにも自動反映されます
+- 公開サイトの物件情報はまだ静的データです。本番DBに物件が無い間、その物件の予約ボタンは「オンライン予約を受け付けていません」と表示されます（物件の登録は P2 の CMS で対応）
