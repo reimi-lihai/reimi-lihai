@@ -1,4 +1,4 @@
-import { and, eq, gte, lt } from "drizzle-orm";
+import { and, eq, gte, lt, ne } from "drizzle-orm";
 import { requireAdmin } from "@/server/auth/session";
 import { getDb } from "@/server/db/client";
 import { payments, properties, reservations } from "@/server/db/schema";
@@ -32,7 +32,7 @@ export default async function SalesPage({ searchParams }: { searchParams: { mont
     .select({ r: reservations, p: properties })
     .from(reservations)
     .innerJoin(properties, eq(properties.id, reservations.propertyId))
-    .where(and(eq(reservations.kind, "stay"), gte(reservations.checkIn, from), lt(reservations.checkIn, to)));
+    .where(and(eq(reservations.kind, "stay"), ne(reservations.source, "test"), gte(reservations.checkIn, from), lt(reservations.checkIn, to)));
 
   const gross = pays.reduce((s, x) => s + x.pay.amountCaptured, 0);
   const refunded = pays.reduce((s, x) => s + x.pay.amountRefunded, 0);

@@ -128,7 +128,7 @@ export default async function ReservationDetail({ params }: { params: { code: st
                     {d.keyEvents.map(({ e, door }) => (
                       <li key={e.id} className="flex items-center justify-between gap-3 py-2">
                         <span className="text-ink">
-                          {e.action === "verify" ? "本人確認" : `解錠 ${door ? loc(door) : ""}`}
+                          {e.action === "verify" ? "本人確認" : `${e.action === "lock" ? "施錠" : "解錠"} ${door ? loc(door) : ""}`}
                           {e.reason && <span className="ml-2 text-xs text-muted">{e.reason}</span>}
                         </span>
                         <span className="flex items-center gap-3">

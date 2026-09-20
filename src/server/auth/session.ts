@@ -80,3 +80,10 @@ export function requestMeta() {
   const h = headers();
   return { ip: h.get("x-forwarded-for")?.split(",")[0] ?? null, userAgent: h.get("user-agent") };
 }
+
+/** Route handlers limited to master accounts (e.g. smart-key control). */
+export async function requireMasterApi(): Promise<AdminUser> {
+  const u = await requirePermission();
+  if (u.role !== "master") throw new HttpError(403, "forbidden");
+  return u;
+}

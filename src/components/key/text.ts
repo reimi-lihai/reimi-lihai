@@ -124,6 +124,30 @@ export const KEY_TEXT = T({
     ko: "네트워크를 확인하고 다시 시도해 주세요.",
   },
   retry: { ja: "再読み込み", en: "Retry", "zh-Hant": "重試", "zh-Hans": "重试", ko: "다시 시도" },
+  lockNow: { ja: "今すぐ施錠", en: "Lock now", "zh-Hant": "立即上鎖", "zh-Hans": "立即上锁", ko: "지금 잠그기" },
+  locking: { ja: "施錠中…", en: "Locking…", "zh-Hant": "上鎖中…", "zh-Hans": "上锁中…", ko: "잠그는 중…" },
+  lockedDone: { ja: "施錠しました", en: "Locked", "zh-Hant": "已上鎖", "zh-Hans": "已上锁", ko: "잠겼습니다" },
+  lockFailed: {
+    ja: "施錠できませんでした。ドアが閉まっているかご確認ください",
+    en: "Couldn't lock. Please check the door is closed.",
+    "zh-Hant": "無法上鎖，請確認門已關好",
+    "zh-Hans": "无法上锁，请确认门已关好",
+    ko: "잠그지 못했습니다. 문이 닫혔는지 확인해 주세요",
+  },
+  remoteOffTitle: {
+    ja: "ただいまアプリ解錠を停止しています",
+    en: "App unlocking is paused",
+    "zh-Hant": "目前暫停 App 解鎖",
+    "zh-Hans": "目前暂停 App 解锁",
+    ko: "현재 앱 잠금 해제가 일시 중지되었습니다",
+  },
+  remoteOffLead: {
+    ja: "ドアのテンキーに下の暗証番号を入力してください。お困りの際はサポートへご連絡ください。",
+    en: "Please enter the door code below on the keypad. Contact support if you need help.",
+    "zh-Hant": "請在門鎖鍵盤輸入下方密碼。如需協助請聯絡客服。",
+    "zh-Hans": "请在门锁键盘输入下方密码。如需帮助请联系客服。",
+    ko: "도어 키패드에 아래 비밀번호를 입력해 주세요. 도움이 필요하면 고객지원에 문의해 주세요.",
+  },
 });
 
 export type KeyTextKey = keyof typeof KEY_TEXT;

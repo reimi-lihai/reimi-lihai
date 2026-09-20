@@ -16,11 +16,12 @@ import {
   Lock,
   LockOpen,
   MessageCircle,
+  PauseCircle,
   ShieldCheck,
   Wifi,
 } from "lucide-react";
 import { useI18n } from "@/i18n/I18nProvider";
-import { LOCALES, LOCALE_META, type Locale } from "@/i18n/config";
+import { INTL_LOCALE, LOCALES, LOCALE_META, type Locale } from "@/i18n/config";
 import { KEY_TEXT, type KeyTextKey } from "./text";
 
 /* ---------------- palette: 青 / 白 / 黄 ---------------- */
@@ -36,7 +37,29 @@ const C = {
 };
 
 type DoorName = Record<Locale, string>;
-interface PassView {
+
+/** Screen settings controlled by the master in 管理画面 → スマートキー. */
+export interface KeyUi {
+  remoteEnabled: boolean;
+  holdMs: number;
+  relockSec: number;
+  manualLock: boolean;
+  showPin: boolean;
+  showWifi: boolean;
+  showSupport: boolean;
+}
+
+export const FALLBACK_UI: KeyUi = {
+  remoteEnabled: true,
+  holdMs: 1200,
+  relockSec: 8,
+  manualLock: true,
+  showPin: true,
+  showWifi: true,
+  showSupport: true,
+};
+
+export interface PassView {
   reservationCode: string;
   guestName: string | null;
   propertyName: string;
@@ -49,6 +72,7 @@ interface PassView {
   doors: { id: string; name: DoorName; pin: string | null }[];
   wifi: { ssid: string; password: string } | null;
   demo?: boolean;
+  ui?: KeyUi;
 }
 
 type LoadState =
@@ -57,10 +81,96 @@ type LoadState =
   | { kind: "error" }
   | { kind: "ready"; pass: PassView };
 
-const HOLD_MS = 1200;
+/* ---------------- transport: real API or admin preview mock ---------------- */
 
-export function GuestKey({ token }: { token: string }) {
-  const { locale, setLocale, intlLocale } = useI18n();
+type DoorResult = { ok: true; relockInSec?: number } | { ok: false; error: "limited" | "remote_disabled" | "error" };
+type VerifyResult = { ok: true; pass: PassView } | { ok: false; error: "locked" | "mismatch" | "network" };
+
+interface KeyTransport {
+  load(): Promise<{ kind: "ok"; pass: PassView } | { kind: "notfound" } | { kind: "error" }>;
+  verify(surname: string): Promise<VerifyResult>;
+  door(action: "unlock" | "lock", doorId: string): Promise<DoorResult>;
+}
+
+function apiTransport(token: string): KeyTransport {
+  const base = `/api/guest/key/${encodeURIComponent(token)}`;
+  const post = (path: string, body: unknown) =>
+    fetch(`${base}${path}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  return {
+    async load() {
+      try {
+        const res = await fetch(base, { cache: "no-store" });
+        if (res.status === 404) return { kind: "notfound" };
+        const json = await res.json();
+        return json.ok ? { kind: "ok", pass: json.pass } : { kind: "error" };
+      } catch {
+        return { kind: "error" };
+      }
+    },
+    async verify(surname) {
+      try {
+        const res = await post("/verify", { surname });
+        const json = await res.json().catch(() => ({}));
+        if (res.status === 429) return { ok: false, error: "locked" };
+        if (!json.ok) return { ok: false, error: "mismatch" };
+        return { ok: true, pass: json.pass };
+      } catch {
+        return { ok: false, error: "network" };
+      }
+    },
+    async door(action, doorId) {
+      try {
+        const res = await post(`/${action}`, { doorId });
+        if (res.status === 429) return { ok: false, error: "limited" };
+        const json = await res.json().catch(() => ({}));
+        if (!json.ok) return { ok: false, error: json.error === "remote_disabled" ? "remote_disabled" : "error" };
+        return { ok: true, relockInSec: json.relockInSec };
+      } catch {
+        return { ok: false, error: "error" };
+      }
+    },
+  };
+}
+
+/** Admin preview: same screen, no network — every action is simulated. */
+export interface KeyPreview {
+  pass: PassView;
+  locale: Locale;
+  /** what the simulated door answers */
+  outcome: "success" | "error" | "limited";
+}
+
+function previewTransport(p: KeyPreview): KeyTransport {
+  const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  return {
+    async load() {
+      return { kind: "ok", pass: p.pass };
+    },
+    async verify(surname) {
+      await wait(500);
+      return { ok: true, pass: { ...p.pass, verified: true, guestName: surname.trim().toUpperCase() } };
+    },
+    async door(action) {
+      await wait(action === "unlock" ? 900 : 700);
+      if (!p.pass.ui?.remoteEnabled) return { ok: false, error: "remote_disabled" };
+      if (p.outcome === "limited") return { ok: false, error: "limited" };
+      if (p.outcome === "error") return { ok: false, error: "error" };
+      return { ok: true, relockInSec: p.pass.ui?.relockSec };
+    },
+  };
+}
+
+export function GuestKey({ token, preview }: { token: string; preview?: KeyPreview }) {
+  const i18n = useI18n();
+  // In preview the language switch stays local (doesn't change the admin's site language).
+  const [previewLocale, setPreviewLocale] = useState<Locale>(preview?.locale ?? "ja");
+  useEffect(() => {
+    if (preview) setPreviewLocale(preview.locale);
+  }, [preview]);
+  const locale = preview ? previewLocale : i18n.locale;
+  const setLocale = preview ? setPreviewLocale : i18n.setLocale;
+  const intlLocale = preview ? INTL_LOCALE[previewLocale] : i18n.intlLocale;
+
   const tx = useCallback(
     (k: KeyTextKey, vars?: Record<string, string | number>) => {
       let s = KEY_TEXT[k][locale] ?? KEY_TEXT[k].ja;
@@ -70,19 +180,13 @@ export function GuestKey({ token }: { token: string }) {
     [locale]
   );
 
+  const transport = useMemo(() => (preview ? previewTransport(preview) : apiTransport(token)), [preview, token]);
   const [load, setLoad] = useState<LoadState>({ kind: "loading" });
 
   const fetchPass = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/guest/key/${encodeURIComponent(token)}`, { cache: "no-store" });
-      if (res.status === 404) return setLoad({ kind: "notfound" });
-      const json = await res.json();
-      if (!json.ok) return setLoad({ kind: "error" });
-      setLoad({ kind: "ready", pass: json.pass });
-    } catch {
-      setLoad({ kind: "error" });
-    }
-  }, [token]);
+    const r = await transport.load();
+    setLoad(r.kind === "ok" ? { kind: "ready", pass: r.pass } : r);
+  }, [transport]);
 
   useEffect(() => {
     fetchPass();
@@ -139,11 +243,12 @@ export function GuestKey({ token }: { token: string }) {
         )}
         {load.kind === "ready" && (
           <ReadyState
-            token={token}
+            transport={transport}
             pass={load.pass}
             tx={tx}
             locale={locale}
             fmt={fmt}
+            preview={!!preview}
             onVerified={(p) => setLoad({ kind: "ready", pass: p })}
             onRefresh={fetchPass}
           />
@@ -159,24 +264,27 @@ type Tx = (k: KeyTextKey, vars?: Record<string, string | number>) => string;
 type Fmt = { dateTime: Intl.DateTimeFormat; time: Intl.DateTimeFormat };
 
 function ReadyState({
-  token,
+  transport,
   pass,
   tx,
   locale,
   fmt,
+  preview,
   onVerified,
   onRefresh,
 }: {
-  token: string;
+  transport: KeyTransport;
   pass: PassView;
   tx: Tx;
   locale: Locale;
   fmt: Fmt;
+  preview: boolean;
   onVerified: (p: PassView) => void;
   onRefresh: () => void;
 }) {
   const from = new Date(pass.validFrom);
   const until = new Date(pass.validUntil);
+  const ui = pass.ui ?? FALLBACK_UI;
 
   return (
     <>
@@ -213,11 +321,11 @@ function ReadyState({
             tx={tx}
           />
         ) : !pass.verified ? (
-          <VerifyCard token={token} tx={tx} demo={pass.demo} onVerified={onVerified} />
+          <VerifyCard transport={transport} tx={tx} demo={pass.demo} preview={preview} onVerified={onVerified} />
         ) : pass.state === "upcoming" ? (
           <UpcomingCard from={from} tx={tx} onReached={onRefresh} />
         ) : (
-          <ActiveKey token={token} pass={pass} tx={tx} locale={locale} fmt={fmt} until={until} />
+          <ActiveKey transport={transport} pass={pass} ui={ui} tx={tx} locale={locale} fmt={fmt} until={until} />
         )}
       </div>
 
@@ -236,72 +344,93 @@ function ReadyState({
 
 /* ---------------- Active key ---------------- */
 
-type UnlockStatus = "idle" | "unlocking" | "unlocked" | "error" | "limited";
+type DoorStatus = "idle" | "unlocking" | "unlocked" | "locking" | "locked" | "error" | "lockError" | "limited" | "off";
 
 function ActiveKey({
-  token,
+  transport,
   pass,
+  ui,
   tx,
   locale,
   fmt,
   until,
 }: {
-  token: string;
+  transport: KeyTransport;
   pass: PassView;
+  ui: KeyUi;
   tx: Tx;
   locale: Locale;
   fmt: Fmt;
   until: Date;
 }) {
   const [doorId, setDoorId] = useState(pass.doors[0]?.id ?? "");
-  const [status, setStatus] = useState<UnlockStatus>("idle");
+  const [status, setStatus] = useState<DoorStatus>(ui.remoteEnabled ? "idle" : "off");
   const [relock, setRelock] = useState(0);
   const door = pass.doors.find((d) => d.id === doorId) ?? pass.doors[0];
+  const busy = status === "unlocking" || status === "locking";
 
-  // relock countdown
   useEffect(() => {
+    setStatus((s) => (!ui.remoteEnabled ? "off" : s === "off" ? "idle" : s));
+  }, [ui.remoteEnabled]);
+
+  // relock countdown → "locked" confirmation → idle
+  useEffect(() => {
+    if (status === "locked") {
+      const id = setTimeout(() => setStatus("idle"), 2200);
+      return () => clearTimeout(id);
+    }
     if (status !== "unlocked") return;
     if (relock <= 0) {
-      setStatus("idle");
+      setStatus("locked");
       return;
     }
     const id = setTimeout(() => setRelock((s) => s - 1), 1000);
     return () => clearTimeout(id);
   }, [status, relock]);
 
+  const vibrate = (p: number | number[]) => {
+    try {
+      navigator.vibrate?.(p);
+    } catch {
+      /* noop */
+    }
+  };
+
   const unlock = useCallback(async () => {
     setStatus("unlocking");
-    try {
-      const res = await fetch(`/api/guest/key/${encodeURIComponent(token)}/unlock`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ doorId }),
-      });
-      if (res.status === 429) return setStatus("limited");
-      const json = await res.json();
-      if (!json.ok) return setStatus("error");
-      try {
-        navigator.vibrate?.([30, 40, 60]);
-      } catch {
-        /* noop */
-      }
-      setRelock(json.relockInSec ?? 8);
-      setStatus("unlocked");
-    } catch {
-      setStatus("error");
-    }
-  }, [token, doorId]);
+    const r = await transport.door("unlock", doorId);
+    if (!r.ok) return setStatus(r.error === "limited" ? "limited" : r.error === "remote_disabled" ? "off" : "error");
+    vibrate([30, 40, 60]);
+    setRelock(r.relockInSec ?? ui.relockSec);
+    setStatus("unlocked");
+  }, [transport, doorId, ui.relockSec]);
+
+  const lockNow = useCallback(async () => {
+    setStatus("locking");
+    const r = await transport.door("lock", doorId);
+    if (!r.ok) return setStatus(r.error === "limited" ? "limited" : r.error === "remote_disabled" ? "off" : "lockError");
+    vibrate(40);
+    setStatus("locked");
+  }, [transport, doorId]);
 
   const statusLine =
     status === "unlocking"
       ? tx("unlocking")
       : status === "unlocked"
       ? tx("relock", { s: relock })
+      : status === "locking"
+      ? tx("locking")
+      : status === "locked"
+      ? tx("lockedDone")
       : status === "error"
       ? tx("failed")
+      : status === "lockError"
+      ? tx("lockFailed")
       : status === "limited"
       ? tx("rateLimited")
       : tx("holdToUnlock");
+
+  const isErr = status === "error" || status === "lockError" || status === "limited";
 
   return (
     <div className="space-y-4">
@@ -327,10 +456,10 @@ function ActiveKey({
                   key={d.id}
                   role="tab"
                   aria-selected={active}
-                  disabled={status === "unlocking"}
+                  disabled={busy}
                   onClick={() => {
                     setDoorId(d.id);
-                    if (status !== "unlocking") setStatus("idle");
+                    if (!busy && status !== "off") setStatus("idle");
                   }}
                   className="relative rounded-full px-3 py-2 text-[13px] font-semibold transition-colors"
                   style={{ color: active ? "#fff" : C.navy }}
@@ -350,29 +479,65 @@ function ActiveKey({
           </div>
         )}
 
-        <div className="mt-6 flex justify-center">
-          <HoldButton status={status} onComplete={unlock} label={`${tx("holdToUnlock")} — ${door?.name[locale] ?? ""}`} />
-        </div>
-
-        <p
-          aria-live="polite"
-          className="mt-5 text-center text-sm font-semibold"
-          style={{
-            color:
-              status === "error" || status === "limited"
-                ? "#c82a3a"
-                : status === "unlocked"
-                ? C.yellowDeep
-                : C.navy,
-          }}
-        >
-          {status === "unlocked" && (
-            <span className="block text-lg font-bold" style={{ color: C.navy }}>
-              {tx("unlocked")}
+        {status === "off" ? (
+          <div className="mt-6 text-center">
+            <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full" style={{ background: `${C.yellow}33`, color: C.navy }}>
+              <PauseCircle className="h-8 w-8" aria-hidden />
             </span>
-          )}
-          {statusLine}
-        </p>
+            <h2 className="mt-4 text-base font-bold" style={{ color: C.navy }}>
+              {tx("remoteOffTitle")}
+            </h2>
+            <p className="mt-1 text-sm leading-relaxed" style={{ color: C.muted }}>
+              {tx("remoteOffLead")}
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="mt-6 flex justify-center">
+              <HoldButton
+                status={status}
+                holdMs={ui.holdMs}
+                onComplete={unlock}
+                label={`${tx("holdToUnlock")} — ${door?.name[locale] ?? ""}`}
+              />
+            </div>
+
+            <p
+              aria-live="polite"
+              className="mt-5 text-center text-sm font-semibold"
+              style={{ color: isErr ? "#c82a3a" : status === "unlocked" ? C.yellowDeep : C.navy }}
+            >
+              {status === "unlocked" && (
+                <span className="block text-lg font-bold" style={{ color: C.navy }}>
+                  {tx("unlocked")}
+                </span>
+              )}
+              {statusLine}
+            </p>
+
+            <AnimatePresence>
+              {ui.manualLock && (status === "unlocked" || status === "locking") && (
+                <motion.div
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 6 }}
+                  className="mt-4 flex justify-center"
+                >
+                  <button
+                    type="button"
+                    onClick={lockNow}
+                    disabled={status === "locking"}
+                    className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold text-white transition active:scale-95 disabled:opacity-70"
+                    style={{ background: `linear-gradient(120deg, ${C.navy}, ${C.blue})`, boxShadow: "0 10px 24px -12px rgba(12,40,92,.6)" }}
+                  >
+                    {status === "locking" ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Lock className="h-4 w-4" aria-hidden />}
+                    {tx("lockNow")}
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </>
+        )}
       </motion.section>
 
       {/* Info tiles */}
@@ -382,21 +547,25 @@ function ActiveKey({
         transition={{ duration: 0.5, delay: 0.12 }}
         className="grid grid-cols-2 gap-3"
       >
-        <PinTile pin={door?.pin ?? null} tx={tx} doorName={door?.name[locale] ?? ""} />
-        <Tile icon={<Clock className="h-4 w-4" />} label={tx("checkout")}>
+        {ui.showPin ? (
+          <PinTile pin={door?.pin ?? null} tx={tx} doorName={door?.name[locale] ?? ""} />
+        ) : null}
+        <Tile icon={<Clock className="h-4 w-4" />} label={tx("checkout")} className={ui.showPin ? "" : "col-span-2"}>
           <span className="text-xl font-bold tracking-tight" style={{ color: C.navy }}>
             {fmt.time.format(until)}
           </span>
         </Tile>
-        {pass.wifi && <WifiTile wifi={pass.wifi} tx={tx} />}
-        <Link
-          href="/contact"
-          className="col-span-2 flex items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-sm font-semibold transition active:scale-[.98]"
-          style={{ background: C.ice, color: C.navy }}
-        >
-          <MessageCircle className="h-4 w-4" style={{ color: C.blue }} aria-hidden />
-          {tx("support")}
-        </Link>
+        {ui.showWifi && pass.wifi && <WifiTile wifi={pass.wifi} tx={tx} />}
+        {ui.showSupport && (
+          <Link
+            href="/contact"
+            className="col-span-2 flex items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-sm font-semibold transition active:scale-[.98]"
+            style={{ background: C.ice, color: C.navy }}
+          >
+            <MessageCircle className="h-4 w-4" style={{ color: C.blue }} aria-hidden />
+            {tx("support")}
+          </Link>
+        )}
       </motion.div>
     </div>
   );
@@ -406,10 +575,12 @@ function ActiveKey({
 
 function HoldButton({
   status,
+  holdMs,
   onComplete,
   label,
 }: {
-  status: UnlockStatus;
+  status: DoorStatus;
+  holdMs: number;
   onComplete: () => void;
   label: string;
 }) {
@@ -417,7 +588,7 @@ function HoldButton({
   const raf = useRef<number | null>(null);
   const start = useRef<number | null>(null);
   const holding = useRef(false);
-  const disabled = status === "unlocking" || status === "unlocked";
+  const disabled = status === "unlocking" || status === "unlocked" || status === "locking";
 
   const stop = useCallback(() => {
     holding.current = false;
@@ -431,7 +602,7 @@ function HoldButton({
     (t: number) => {
       if (!holding.current) return;
       if (start.current == null) start.current = t;
-      const p = Math.min(1, (t - start.current) / HOLD_MS);
+      const p = Math.min(1, (t - start.current) / holdMs);
       setProgress(p);
       if (p >= 1) {
         holding.current = false;
@@ -442,7 +613,7 @@ function HoldButton({
       }
       raf.current = requestAnimationFrame(tick);
     },
-    [onComplete]
+    [onComplete, holdMs]
   );
 
   const begin = useCallback(() => {
@@ -532,7 +703,7 @@ function HoldButton({
         }}
       >
         <AnimatePresence mode="wait" initial={false}>
-          {status === "unlocking" ? (
+          {status === "unlocking" || status === "locking" ? (
             <motion.span key="spin" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <Loader2 className="h-14 w-14 animate-spin" aria-hidden />
             </motion.span>
@@ -557,7 +728,7 @@ function HoldButton({
           className="mt-2 text-[11px] font-semibold uppercase tracking-[0.25em]"
           style={{ color: unlocked ? C.navy : "rgba(255,255,255,.85)" }}
         >
-          {unlocked ? "OPEN" : "HOLD"}
+          {unlocked ? "OPEN" : status === "locked" ? "LOCKED" : "HOLD"}
         </span>
       </motion.button>
     </div>
@@ -650,14 +821,16 @@ function WifiTile({ wifi, tx }: { wifi: { ssid: string; password: string }; tx: 
 /* ---------------- Verify ---------------- */
 
 function VerifyCard({
-  token,
+  transport,
   tx,
   demo,
+  preview,
   onVerified,
 }: {
-  token: string;
+  transport: KeyTransport;
   tx: Tx;
   demo?: boolean;
+  preview?: boolean;
   onVerified: (p: PassView) => void;
 }) {
   const [surname, setSurname] = useState("");
@@ -669,21 +842,10 @@ function VerifyCard({
     if (!surname.trim() || busy) return;
     setBusy(true);
     setErr(null);
-    try {
-      const res = await fetch(`/api/guest/key/${encodeURIComponent(token)}/verify`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ surname }),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (res.status === 429) setErr(tx("locked"));
-      else if (!json.ok) setErr(tx("mismatch"));
-      else onVerified(json.pass);
-    } catch {
-      setErr(tx("errorLead"));
-    } finally {
-      setBusy(false);
-    }
+    const r = await transport.verify(surname);
+    if (r.ok) onVerified(r.pass);
+    else setErr(r.error === "locked" ? tx("locked") : r.error === "network" ? tx("errorLead") : tx("mismatch"));
+    setBusy(false);
   };
 
   return (
@@ -735,11 +897,15 @@ function VerifyCard({
         {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <KeyRound className="h-4 w-4" aria-hidden />}
         {tx("verifyBtn")}
       </button>
-      {demo && (
+      {preview ? (
+        <p className="mt-4 rounded-lg px-3 py-2 text-center text-[11.5px]" style={{ background: C.ice, color: C.muted }}>
+          PREVIEW — 何を入力しても進めます
+        </p>
+      ) : demo ? (
         <p className="mt-4 rounded-lg px-3 py-2 text-center text-[11.5px]" style={{ background: C.ice, color: C.muted }}>
           DEMO — surname: <b style={{ color: C.navy }}>Chen</b>
         </p>
-      )}
+      ) : null}
     </motion.form>
   );
 }

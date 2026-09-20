@@ -374,7 +374,7 @@ export const unlockEvents = pgTable("unlock_events", {
   id: uuid("id").primaryKey().defaultRandom(),
   passId: uuid("pass_id").notNull().references(() => guestAccessPasses.id, { onDelete: "cascade" }),
   lockDeviceId: uuid("lock_device_id").references(() => lockDevices.id),
-  action: text("action", { enum: ["verify", "unlock"] }).notNull(),
+  action: text("action", { enum: ["verify", "unlock", "lock"] }).notNull(),
   result: text("result", { enum: ["success", "denied", "error"] }).notNull(),
   reason: text("reason"),
   ipHash: text("ip_hash"),

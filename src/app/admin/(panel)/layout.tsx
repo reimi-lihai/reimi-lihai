@@ -9,13 +9,14 @@ import { NavLink } from "./NavLink";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "管理画面", robots: { index: false } };
 
-const NAV: { href: string; label: string; icon: typeof Gauge; perm?: Permission }[] = [
+const NAV: { href: string; label: string; icon: typeof Gauge; perm?: Permission; master?: boolean }[] = [
   { href: "/admin", label: "ダッシュボード", icon: Gauge },
   { href: "/admin/calendar", label: "カレンダー", icon: CalendarDays, perm: "reservations:read" },
   { href: "/admin/reservations", label: "予約一覧", icon: ClipboardList, perm: "reservations:read" },
   { href: "/admin/pricing", label: "料金", icon: Tags, perm: "reservations:read" },
   { href: "/admin/inbox", label: "チャット", icon: MessagesSquare, perm: "chat" },
   { href: "/admin/tasks", label: "タスク", icon: ListChecks, perm: "tasks" },
+  { href: "/admin/keys", label: "スマートキー", icon: KeyRound, master: true },
   { href: "/admin/sales", label: "売上", icon: JapaneseYen, perm: "sales:read" },
   { href: "/admin/users", label: "管理者・権限", icon: Users },
   { href: "/admin/settings", label: "設定", icon: Settings, perm: "reservations:read" },
@@ -24,7 +25,7 @@ const NAV: { href: string; label: string; icon: typeof Gauge; perm?: Permission 
 
 export default async function PanelLayout({ children }: { children: ReactNode }) {
   const me = await requireAdmin();
-  const nav = NAV.filter((n) => !n.perm || can(me, n.perm));
+  const nav = NAV.filter((n) => (!n.perm || can(me, n.perm)) && (!n.master || me.role === "master"));
   return (
     <div className="min-h-[100dvh] bg-surface lg:flex">
       <aside className="flex flex-col bg-[#0c285c] text-white lg:sticky lg:top-0 lg:h-[100dvh] lg:w-60 lg:shrink-0">

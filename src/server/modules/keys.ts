@@ -18,6 +18,7 @@ import {
   unlockEvents,
 } from "../db/schema";
 import { stayWindow } from "./reservations";
+import { getKeyUi } from "./key-settings";
 
 export type PassState = "upcoming" | "active" | "expired" | "revoked";
 
@@ -138,6 +139,7 @@ export async function guestView(db: Db, row: PassRow, verified: boolean) {
     .orderBy(asc(lockDevices.sortOrder));
 
   const name = row.p.name;
+  const { ui } = await getKeyUi(db);
   return {
     reservationCode: row.r.code,
     guestName: verified ? row.c.familyName : null,
@@ -157,6 +159,7 @@ export async function guestView(db: Db, row: PassRow, verified: boolean) {
     })),
     wifi: verified && row.p.wifiSsid ? { ssid: row.p.wifiSsid, password: row.p.wifiPassword ?? "" } : null,
     demo: !(process.env.DATABASE_URL || process.env.POSTGRES_URL),
+    ui,
   };
 }
 
@@ -170,7 +173,7 @@ export function checkIdentity(row: PassRow, input: string): boolean {
 
 export async function logKeyEvent(
   db: Db,
-  e: { passId: string; action: "verify" | "unlock"; result: "success" | "denied" | "error"; reason?: string; lockDeviceId?: string; ip?: string | null }
+  e: { passId: string; action: "verify" | "unlock" | "lock"; result: "success" | "denied" | "error"; reason?: string; lockDeviceId?: string; ip?: string | null }
 ) {
   await db.insert(unlockEvents).values({
     passId: e.passId,
@@ -200,11 +203,17 @@ export async function recentKeyEvents(db: Db, reservationId: string, limit = 20)
 
 export interface LockAdapter {
   remoteUnlock(externalId: string): Promise<{ ok: boolean }>;
+  remoteLock(externalId: string): Promise<{ ok: boolean }>;
 }
 
+/** Demo lock: always succeeds after a short delay (no hardware). */
 const demoAdapter: LockAdapter = {
   async remoteUnlock() {
     await new Promise((r) => setTimeout(r, 900));
+    return { ok: true };
+  },
+  async remoteLock() {
+    await new Promise((r) => setTimeout(r, 700));
     return { ok: true };
   },
 };
