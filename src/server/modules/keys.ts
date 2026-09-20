@@ -156,7 +156,7 @@ export async function guestView(db: Db, row: PassRow, verified: boolean) {
       pin: verified ? c?.pinCode ?? null : null,
     })),
     wifi: verified && row.p.wifiSsid ? { ssid: row.p.wifiSsid, password: row.p.wifiPassword ?? "" } : null,
-    demo: !process.env.DATABASE_URL,
+    demo: !(process.env.DATABASE_URL || process.env.POSTGRES_URL),
   };
 }
 
