@@ -26,6 +26,25 @@ export function databaseUrl(): string | undefined {
   return process.env.DATABASE_URL || process.env.POSTGRES_URL || undefined;
 }
 
+/**
+ * The Vercel ⇄ Supabase integration appends params such as `supa=base-pooler.x`
+ * to POSTGRES_URL. postgres-js forwards unknown query params to the server as
+ * startup settings, which fails with `unrecognized configuration parameter "supa"`.
+ * Keep only sslmode (mapped to postgres-js' `ssl` option) and drop the rest.
+ */
+export function sanitizeUrl(raw: string): { url: string; ssl: "require" | false | undefined } {
+  try {
+    const u = new URL(raw);
+    const sslmode = u.searchParams.get("sslmode");
+    u.search = "";
+    const local = ["localhost", "127.0.0.1"].includes(u.hostname);
+    const ssl = sslmode === "disable" ? false : sslmode || !local ? "require" : undefined;
+    return { url: u.toString(), ssl };
+  } catch {
+    return { url: raw, ssl: undefined };
+  }
+}
+
 export function isEmbeddedDb(): boolean {
   return !databaseUrl();
 }
@@ -35,7 +54,8 @@ async function connect(): Promise<Db> {
   if (url) {
     const { drizzle } = await import("drizzle-orm/postgres-js");
     const postgres = (await import("postgres")).default;
-    const sql = postgres(url, { prepare: false, max: 5 });
+    const { url: cleanUrl, ssl } = sanitizeUrl(url);
+    const sql = postgres(cleanUrl, { prepare: false, max: 5, ssl });
     const db = drizzle(sql, { schema });
     const { bootstrapMasterAdmin } = await import("./bootstrap");
     await bootstrapMasterAdmin(db);
