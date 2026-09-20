@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useI18n } from "@/i18n/I18nProvider";
@@ -14,7 +14,31 @@ import { CheckCircle2, XCircle, MinusCircle } from "lucide-react";
 function ResultInner() {
   const { t } = useI18n();
   const sp = useSearchParams();
-  const status = (sp.get("status") || "success") as "success" | "failed" | "canceled";
+  const code = sp.get("code");
+  const token = sp.get("token");
+  // Returning from a Stripe redirect (3-D Secure etc.): ask the server what happened.
+  const [polled, setPolled] = useState<"success" | "failed" | "pending" | null>(code && token ? "pending" : null);
+  useEffect(() => {
+    if (!code || !token) return;
+    let stop = false;
+    const until = Date.now() + 25_000;
+    (async () => {
+      while (!stop && Date.now() < until) {
+        const j = await fetch(`/api/v1/reservations/status?code=${encodeURIComponent(code)}&token=${encodeURIComponent(token)}`, { cache: "no-store" })
+          .then((r) => r.json())
+          .catch(() => null);
+        if (j?.status === "confirmed") return setPolled("success");
+        if (j?.status === "cancelled" || j?.paymentStatus === "failed") return setPolled("failed");
+        await new Promise((r) => setTimeout(r, 1500));
+      }
+      if (!stop) setPolled("failed");
+    })();
+    return () => {
+      stop = true;
+    };
+  }, [code, token]);
+  if (polled === "pending") return <div className="container-page py-20 text-center text-muted">…</div>;
+  const status = (polled ?? sp.get("status") ?? "success") as "success" | "failed" | "canceled";
 
   const map = {
     success: { icon: CheckCircle2, color: "text-brand", title: t("payment.successTitle"), lead: t("payment.successLead") },
@@ -30,9 +54,10 @@ function ResultInner() {
         <Icon className={`mx-auto h-16 w-16 ${s.color}`} aria-hidden />
         <h1 className="mt-5 font-serif text-2xl font-bold text-ink">{s.title}</h1>
         <p className="mt-2 text-muted">{s.lead}</p>
+        {status === "success" && code && <p className="mt-4 font-mono text-2xl font-bold text-brand">{code}</p>}
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           {status === "success" ? (
-            <Link href="/booking/confirmation" className="btn-primary">{t("booking.viewConfirmation")}</Link>
+            !code && <Link href="/booking/confirmation" className="btn-primary">{t("booking.viewConfirmation")}</Link>
           ) : (
             <Link href="/stays" className="btn-primary">{t("payment.retry")}</Link>
           )}

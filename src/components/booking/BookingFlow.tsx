@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useI18n } from "@/i18n/I18nProvider";
@@ -11,9 +11,21 @@ import { saveConfirmed } from "@/lib/bookingStore";
 import { BookingStepper } from "./BookingStepper";
 import { PriceBreakdown } from "./PriceBreakdown";
 import { PaymentForm } from "./PaymentForm";
+import { StripePayment } from "./StripePayment";
 import { ErrorState } from "@/components/ui/states";
 import type { Accommodation, BookingDraft } from "@/lib/types";
-import { CalendarDays, Users, XCircle, ArrowLeft, MessageCircle } from "lucide-react";
+import { CalendarDays, Users, XCircle, ArrowLeft, MessageCircle, Loader2, Clock } from "lucide-react";
+import type { PriceBreakdown as PB } from "@/lib/types";
+
+type ServerQuote =
+  | { state: "loading" }
+  | { state: "ok"; price: PB }
+  | { state: "unavailable"; reason: string; price?: PB }
+  | { state: "error" };
+
+type StripeSession = { clientSecret: string; code: string; statusToken: string; amount: number };
+
+const HOLD_MINUTES = 30;
 
 type Errors = Partial<Record<string, string>>;
 
@@ -21,10 +33,12 @@ export function BookingFlow({
   stay,
   draft,
   demo,
+  publishableKey = "",
 }: {
   stay: Accommodation;
   draft: BookingDraft;
   demo: boolean;
+  publishableKey?: string;
 }) {
   const { t, locale } = useI18n();
   const router = useRouter();
@@ -45,7 +59,7 @@ export function BookingFlow({
   const [processing, setProcessing] = useState(false);
   const [payStatus, setPayStatus] = useState<"idle" | "failed">("idle");
 
-  const price = useMemo(
+  const localPrice = useMemo(
     () =>
       computePrice({
         pricePerNight: plan.pricePerNight,
@@ -57,6 +71,96 @@ export function BookingFlow({
       }),
     [plan, stay.cleaningFee, draft]
   );
+
+  // Authoritative price + availability from the server (rules, overrides, bookings).
+  const [sq, setSq] = useState<ServerQuote>({ state: "loading" });
+  useEffect(() => {
+    let cancelled = false;
+    setSq({ state: "loading" });
+    fetch("/api/v1/quotes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ stay: stay.id, plan: plan.id, checkIn: draft.checkIn, checkOut: draft.checkOut, adults: draft.adults, children: draft.children }),
+    })
+      .then(async (r) => {
+        const j = await r.json().catch(() => null);
+        if (cancelled) return;
+        if (r.ok && j?.ok && j.available) setSq({ state: "ok", price: j.quote });
+        else if (j?.reason || j?.error) setSq({ state: "unavailable", reason: j.reason ?? j.error, price: j.quote ?? undefined });
+        else setSq({ state: "error" });
+      })
+      .catch(() => !cancelled && setSq({ state: "error" }));
+    return () => {
+      cancelled = true;
+    };
+  }, [stay.id, plan.id, draft.checkIn, draft.checkOut, draft.adults, draft.children]);
+
+  const price: PB = sq.state === "ok" ? sq.price : sq.state === "unavailable" && sq.price ? sq.price : localPrice;
+  const unavailable = sq.state === "unavailable";
+  const [stripeSession, setStripeSession] = useState<StripeSession | null>(null);
+  const [bookError, setBookError] = useState<string | null>(null);
+
+  const reasonText = (reason: string) => {
+    const m = /^min_nights_(\d+)$/.exec(reason);
+    if (m) return t("payment.r_min_nights", { n: m[1] });
+    const key = `payment.r_${reason}`;
+    const txt = t(key);
+    return txt === key ? t("payment.r_generic") : txt;
+  };
+
+  const bookingBody = (simulate?: "success" | "failure") => ({
+    stay: stay.id,
+    plan: plan.id,
+    checkIn: draft.checkIn,
+    checkOut: draft.checkOut,
+    adults: draft.adults,
+    children: draft.children,
+    locale,
+    guest: {
+      fullName: guest.fullName,
+      email: guest.email,
+      phone: guest.phone,
+      country: guest.country,
+      arrivalTime: guest.arrivalTime || undefined,
+      messagingId: guest.messagingId || undefined,
+      notes: guest.notes || undefined,
+    },
+    simulate,
+  });
+
+  function saveAndGo(code: string, amount: number) {
+    saveConfirmed({
+      bookingNumber: code,
+      draft,
+      accommodationName: loc(stay.name, locale),
+      guestName: guest.fullName,
+      email: guest.email,
+      total: amount,
+      currency: "JPY",
+      createdAt: new Date().toISOString(),
+      status: "confirmed",
+    });
+    router.push("/booking/confirmation");
+  }
+
+  /** Real Stripe: create the hold + PaymentIntent, then show the Payment Element. */
+  async function startStripe() {
+    setProcessing(true);
+    setBookError(null);
+    try {
+      const res = await fetch("/api/v1/reservations", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(bookingBody()) });
+      const j = await res.json().catch(() => ({}));
+      if (res.ok && j.ok && j.clientSecret) {
+        setStripeSession({ clientSecret: j.clientSecret, code: j.bookingNumber, statusToken: j.statusToken, amount: j.amount });
+      } else {
+        setBookError(reasonText(j.error ?? "generic"));
+      }
+    } catch {
+      setBookError(t("payment.r_generic"));
+    } finally {
+      setProcessing(false);
+    }
+  }
 
   function validateGuest(): boolean {
     const result = guestFormSchema.safeParse(guest);
@@ -77,47 +181,26 @@ export function BookingFlow({
     if (validateGuest()) {
       setStep("payment");
       setPayStatus("idle");
+      if (!demo && !stripeSession) void startStripe();
     }
   }
 
+  /** Demo mode: the server creates a real reservation in the DB; only the card is simulated. */
   async function pay(simulate: "success" | "failure") {
     setProcessing(true);
     setPayStatus("idle");
+    setBookError(null);
     try {
-      const res = await fetch("/api/checkout", {
+      const res = await fetch("/api/v1/reservations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          accommodationId: stay.id,
-          planId: plan.id,
-          checkIn: draft.checkIn,
-          checkOut: draft.checkOut,
-          adults: draft.adults,
-          children: draft.children,
-          guest: {
-            fullName: guest.fullName,
-            email: guest.email,
-            phone: guest.phone,
-            country: guest.country,
-            messagingId: guest.messagingId,
-          },
-          simulate,
-        }),
+        body: JSON.stringify(bookingBody(simulate)),
       });
       const data = await res.json();
       if (res.ok && data.ok && data.status === "succeeded") {
-        saveConfirmed({
-          bookingNumber: data.bookingNumber,
-          draft,
-          accommodationName: loc(stay.name, locale),
-          guestName: guest.fullName,
-          email: guest.email,
-          total: data.amount,
-          currency: data.currency,
-          createdAt: new Date().toISOString(),
-          status: "confirmed",
-        });
-        router.push("/booking/confirmation");
+        saveAndGo(data.bookingNumber, data.amount);
+      } else if (data?.error && data.error !== "validation_failed") {
+        setBookError(reasonText(data.error));
       } else {
         setPayStatus("failed");
       }
@@ -137,6 +220,25 @@ export function BookingFlow({
 
       <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
         <div>
+          {sq.state === "loading" && (
+            <p className="mb-4 flex items-center gap-2 text-sm text-muted">
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> {t("payment.checkingPrice")}
+            </p>
+          )}
+          {unavailable && (
+            <div className="mb-6">
+              <ErrorState title={reasonText(sq.reason)}>
+                <Link href={`/stays/${stay.slug}`} className="btn-primary mt-2">{t("payment.changeDates")}</Link>
+              </ErrorState>
+            </div>
+          )}
+          {bookError && (
+            <div className="mb-6">
+              <ErrorState title={bookError}>
+                <Link href={`/stays/${stay.slug}`} className="btn-primary mt-2">{t("payment.changeDates")}</Link>
+              </ErrorState>
+            </div>
+          )}
           {step === "guest" && (
             <form
               onSubmit={(e) => {
@@ -189,7 +291,7 @@ export function BookingFlow({
               </label>
               {errors.agree && <p className="mt-1 text-sm text-crimson" role="alert">{t(errors.agree)}</p>}
 
-              <button type="submit" className="btn-primary mt-6 w-full sm:w-auto">
+              <button type="submit" disabled={unavailable} className="btn-primary mt-6 w-full sm:w-auto">
                 {t("booking.proceedPayment")}
               </button>
             </form>
@@ -209,7 +311,28 @@ export function BookingFlow({
                 </div>
               )}
 
-              <PaymentForm amount={price.total} demo={demo} processing={processing} onPay={pay} />
+              {demo ? (
+                <PaymentForm amount={price.total} demo={demo} processing={processing} onPay={pay} />
+              ) : stripeSession ? (
+                <>
+                  <p className="mb-3 flex items-center gap-2 rounded-lg bg-gold-soft/25 px-3 py-2 text-sm text-brand-deep">
+                    <Clock className="h-4 w-4 shrink-0" aria-hidden /> {t("payment.holdNote", { minutes: HOLD_MINUTES })}
+                  </p>
+                  <StripePayment
+                    publishableKey={publishableKey}
+                    clientSecret={stripeSession.clientSecret}
+                    amount={stripeSession.amount}
+                    code={stripeSession.code}
+                    statusToken={stripeSession.statusToken}
+                    onConfirmed={() => saveAndGo(stripeSession.code, stripeSession.amount)}
+                    onFailed={() => setPayStatus("failed")}
+                  />
+                </>
+              ) : processing ? (
+                <p className="flex items-center gap-2 text-sm text-muted">
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> {t("payment.checkingPrice")}
+                </p>
+              ) : null}
             </div>
           )}
         </div>

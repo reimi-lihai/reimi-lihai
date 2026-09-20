@@ -1,0 +1,129 @@
+import type { Locale } from "@/i18n/config";
+
+/**
+ * Copy for the guest smart-key screen (5 languages).
+ * Kept local to the feature so the key page can ship independently of the
+ * main site dictionaries.
+ */
+const T = <K extends string>(o: Record<K, Record<Locale, string>>) => o;
+
+export const KEY_TEXT = T({
+  title: { ja: "スマートキー", en: "Smart Key", "zh-Hant": "智慧鑰匙", "zh-Hans": "智能钥匙", ko: "스마트 키" },
+  language: { ja: "言語", en: "Language", "zh-Hant": "語言", "zh-Hans": "语言", ko: "언어" },
+  welcome: { ja: "ようこそ、{name} 様", en: "Welcome, {name}", "zh-Hant": "歡迎，{name}", "zh-Hans": "欢迎，{name}", ko: "{name} 님, 환영합니다" },
+  active: { ja: "ご利用可能", en: "Active", "zh-Hant": "可使用", "zh-Hans": "可使用", ko: "사용 가능" },
+  upcoming: { ja: "開始前", en: "Not yet active", "zh-Hant": "尚未開始", "zh-Hans": "尚未开始", ko: "시작 전" },
+  expired: { ja: "期限切れ", en: "Expired", "zh-Hant": "已過期", "zh-Hans": "已过期", ko: "만료됨" },
+  door: { ja: "ドア", en: "Door", "zh-Hant": "門", "zh-Hans": "门", ko: "도어" },
+  holdToUnlock: { ja: "長押しで解錠", en: "Press & hold to unlock", "zh-Hant": "長按以解鎖", "zh-Hans": "长按以解锁", ko: "길게 눌러 잠금 해제" },
+  unlocking: { ja: "解錠中…", en: "Unlocking…", "zh-Hant": "解鎖中…", "zh-Hans": "解锁中…", ko: "잠금 해제 중…" },
+  unlocked: { ja: "解錠しました", en: "Unlocked", "zh-Hant": "已解鎖", "zh-Hans": "已解锁", ko: "잠금 해제됨" },
+  relock: { ja: "{s}秒後に自動で施錠します", en: "Auto-locks in {s}s", "zh-Hant": "{s} 秒後自動上鎖", "zh-Hans": "{s} 秒后自动上锁", ko: "{s}초 후 자동 잠금" },
+  failed: {
+    ja: "解錠できませんでした。もう一度お試しください",
+    en: "Couldn't unlock. Please try again.",
+    "zh-Hant": "無法解鎖，請再試一次",
+    "zh-Hans": "无法解锁，请再试一次",
+    ko: "잠금 해제에 실패했습니다. 다시 시도해 주세요",
+  },
+  rateLimited: {
+    ja: "操作が多すぎます。1分後にお試しください",
+    en: "Too many attempts. Try again in a minute.",
+    "zh-Hant": "操作過於頻繁，請一分鐘後再試",
+    "zh-Hans": "操作过于频繁，请一分钟后再试",
+    ko: "시도가 너무 많습니다. 1분 후 다시 시도해 주세요",
+  },
+  pin: { ja: "暗証番号", en: "Door code", "zh-Hant": "門鎖密碼", "zh-Hans": "门锁密码", ko: "비밀번호" },
+  tapToShow: { ja: "タップで表示", en: "Tap to show", "zh-Hant": "點擊顯示", "zh-Hans": "点击显示", ko: "탭하여 보기" },
+  pinHint: {
+    ja: "通信できない時はテンキーに入力",
+    en: "Use on the keypad if offline",
+    "zh-Hant": "無法連線時請於鍵盤輸入",
+    "zh-Hans": "无法联网时请在键盘输入",
+    ko: "오프라인 시 키패드에 입력",
+  },
+  copy: { ja: "コピー", en: "Copy", "zh-Hant": "複製", "zh-Hans": "复制", ko: "복사" },
+  copied: { ja: "コピー済み", en: "Copied", "zh-Hant": "已複製", "zh-Hans": "已复制", ko: "복사됨" },
+  checkout: { ja: "チェックアウト", en: "Check-out", "zh-Hant": "退房", "zh-Hans": "退房", ko: "체크아웃" },
+  support: { ja: "サポートに連絡", en: "Contact support", "zh-Hant": "聯絡客服", "zh-Hans": "联系客服", ko: "고객지원 문의" },
+  validNote: {
+    ja: "このキーは滞在期間中のみ有効です",
+    en: "This key works only during your stay",
+    "zh-Hant": "此鑰匙僅在入住期間有效",
+    "zh-Hans": "此钥匙仅在入住期间有效",
+    ko: "이 키는 숙박 기간에만 유효합니다",
+  },
+  reservation: { ja: "予約番号", en: "Booking", "zh-Hant": "訂房編號", "zh-Hans": "订单号", ko: "예약 번호" },
+  verifyTitle: { ja: "ご本人確認", en: "Verify it's you", "zh-Hant": "身分確認", "zh-Hans": "身份确认", ko: "본인 확인" },
+  verifyLead: {
+    ja: "予約者の姓（ローマ字）を入力してください。最初の1回だけ必要です。",
+    en: "Enter the lead guest's surname as on the booking. You only need to do this once.",
+    "zh-Hant": "請輸入訂房人的姓氏（英文拼音），僅需一次。",
+    "zh-Hans": "请输入订房人的姓氏（拼音），仅需一次。",
+    ko: "예약자의 성(영문)을 입력해 주세요. 최초 1회만 필요합니다.",
+  },
+  surname: { ja: "姓（例：YAMADA）", en: "Surname (e.g. SMITH)", "zh-Hant": "姓氏（例：CHEN）", "zh-Hans": "姓氏（例：CHEN）", ko: "성 (예: KIM)" },
+  verifyBtn: { ja: "キーを開く", en: "Open my key", "zh-Hant": "開啟鑰匙", "zh-Hans": "打开钥匙", ko: "키 열기" },
+  mismatch: {
+    ja: "姓が予約情報と一致しません",
+    en: "That surname doesn't match the booking",
+    "zh-Hant": "姓氏與訂房資料不符",
+    "zh-Hans": "姓氏与订房信息不符",
+    ko: "성이 예약 정보와 일치하지 않습니다",
+  },
+  locked: {
+    ja: "試行回数の上限に達しました。15分後にお試しください",
+    en: "Too many tries. Please wait 15 minutes.",
+    "zh-Hant": "嘗試次數過多，請 15 分鐘後再試",
+    "zh-Hans": "尝试次数过多，请 15 分钟后再试",
+    ko: "시도 횟수를 초과했습니다. 15분 후 다시 시도해 주세요",
+  },
+  upcomingTitle: {
+    ja: "まもなくご利用いただけます",
+    en: "Your key is almost ready",
+    "zh-Hant": "鑰匙即將可用",
+    "zh-Hans": "钥匙即将可用",
+    ko: "곧 키를 사용할 수 있습니다",
+  },
+  upcomingLead: {
+    ja: "チェックイン時刻になると自動で有効になります",
+    en: "It activates automatically at check-in time",
+    "zh-Hant": "到入住時間將自動啟用",
+    "zh-Hans": "到入住时间将自动启用",
+    ko: "체크인 시간에 자동으로 활성화됩니다",
+  },
+  startsIn: { ja: "開始まで", en: "Starts in", "zh-Hant": "距離開始", "zh-Hans": "距离开始", ko: "시작까지" },
+  expiredTitle: {
+    ja: "このキーは期限切れです",
+    en: "This key has expired",
+    "zh-Hant": "此鑰匙已過期",
+    "zh-Hans": "此钥匙已过期",
+    ko: "이 키는 만료되었습니다",
+  },
+  expiredLead: {
+    ja: "ご滞在ありがとうございました。お忘れ物などはサポートまでご連絡ください。",
+    en: "Thank you for staying with us. For lost items, please contact support.",
+    "zh-Hant": "感謝您的入住。如有遺失物品，請聯絡客服。",
+    "zh-Hans": "感谢您的入住。如有遗失物品，请联系客服。",
+    ko: "이용해 주셔서 감사합니다. 분실물은 고객지원에 문의해 주세요.",
+  },
+  notFound: { ja: "キーが見つかりません", en: "Key not found", "zh-Hant": "找不到鑰匙", "zh-Hans": "找不到钥匙", ko: "키를 찾을 수 없습니다" },
+  notFoundLead: {
+    ja: "受け取ったリンクをご確認ください。",
+    en: "Please check the link you received.",
+    "zh-Hant": "請確認您收到的連結。",
+    "zh-Hans": "请确认您收到的链接。",
+    ko: "받으신 링크를 확인해 주세요.",
+  },
+  errorTitle: { ja: "接続できませんでした", en: "Connection problem", "zh-Hant": "連線失敗", "zh-Hans": "连接失败", ko: "연결 문제" },
+  errorLead: {
+    ja: "通信環境をご確認のうえ、再度お試しください。",
+    en: "Please check your connection and try again.",
+    "zh-Hant": "請確認網路後再試一次。",
+    "zh-Hans": "请检查网络后重试。",
+    ko: "네트워크를 확인하고 다시 시도해 주세요.",
+  },
+  retry: { ja: "再読み込み", en: "Retry", "zh-Hant": "重試", "zh-Hans": "重试", ko: "다시 시도" },
+});
+
+export type KeyTextKey = keyof typeof KEY_TEXT;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useI18n } from "@/i18n/I18nProvider";
 import { loc, formatJPY, todayISO, addDaysISO } from "@/lib/format";
@@ -8,6 +8,8 @@ import { computePrice } from "@/lib/pricing";
 import { Placeholder } from "@/components/ui/Placeholder";
 import { DemoBadge } from "@/components/ui/states";
 import { PriceBreakdown } from "@/components/booking/PriceBreakdown";
+import { AvailabilityStrip } from "./AvailabilityStrip";
+import type { PriceBreakdown as PB } from "@/lib/types";
 import type { Accommodation } from "@/lib/types";
 import {
   Star, Users, BedDouble, Bath, MapPin, Clock, Check, ShieldCheck, CalendarDays,
@@ -27,7 +29,7 @@ export function StayDetail({ stay }: { stay: Accommodation }) {
 
   const plan = stay.plans.find((p) => p.id === planId) ?? stay.plans[0];
 
-  const price = useMemo(
+  const localPrice = useMemo(
     () =>
       computePrice({
         pricePerNight: plan.pricePerNight,
@@ -39,6 +41,39 @@ export function StayDetail({ stay }: { stay: Accommodation }) {
       }),
     [plan, stay.cleaningFee, checkIn, checkOut, adults, children]
   );
+
+  // Live server quote (dynamic pricing + availability), debounced.
+  const [server, setServer] = useState<{ price?: PB; reason?: string | null } | null>(null);
+  useEffect(() => {
+    if (!(checkOut > checkIn)) return setServer(null);
+    const id = setTimeout(() => {
+      fetch("/api/v1/quotes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stay: stay.id, plan: planId, checkIn, checkOut, adults, children }),
+      })
+        .then((r) => r.json())
+        .then((j) => setServer(j.ok ? { price: j.quote ?? undefined, reason: j.available ? null : j.reason } : j.error === "stay_not_found" ? null : { reason: j.error }))
+        .catch(() => setServer(null));
+    }, 250);
+    return () => clearTimeout(id);
+  }, [stay.id, planId, checkIn, checkOut, adults, children]);
+
+  const price = server?.price ?? localPrice;
+  const reason = server?.reason ?? null;
+  const reasonText = (r: string) => {
+    const m = /^min_nights_(\d+)$/.exec(r);
+    if (m) return t("payment.r_min_nights", { n: m[1] });
+    const k = `payment.r_${r}`;
+    const txt = t(k);
+    return txt === k ? t("payment.r_generic") : txt;
+  };
+
+  function pickDate(d: string) {
+    const nights = Math.max(1, Math.round((Date.parse(checkOut) - Date.parse(checkIn)) / 86_400_000) || 2);
+    setCheckIn(d);
+    setCheckOut(addDaysISO(d, nights));
+  }
 
   function reserve() {
     setError(null);
@@ -151,7 +186,7 @@ export function StayDetail({ stay }: { stay: Accommodation }) {
         </div>
 
         {/* Booking box */}
-        <aside className="lg:sticky lg:top-20 lg:self-start">
+        <aside className="min-w-0 lg:sticky lg:top-20 lg:self-start">
           <div className="card p-5">
             <p className="mb-3 flex items-baseline gap-1">
               <span className="text-2xl font-bold text-brand">{formatJPY(plan.pricePerNight, locale)}</span>
@@ -176,6 +211,8 @@ export function StayDetail({ stay }: { stay: Accommodation }) {
                 <input type="number" className="field" min={0} max={stay.maxGuests} value={children} onChange={(e) => setChildren(Math.max(0, Number(e.target.value) || 0))} />
               </label>
             </div>
+
+            <AvailabilityStrip stayId={stay.id} planId={planId} checkIn={checkIn} checkOut={checkOut} onPick={pickDate} />
 
             {/* Plans */}
             <fieldset className="mt-4">
@@ -214,8 +251,9 @@ export function StayDetail({ stay }: { stay: Accommodation }) {
             </div>
 
             {error && <p role="alert" className="mt-3 text-sm text-crimson">{error}</p>}
+            {!error && reason && <p role="alert" className="mt-3 text-sm text-crimson">{reasonText(reason)}</p>}
 
-            <button type="button" onClick={reserve} className="btn-primary mt-4 w-full">
+            <button type="button" onClick={reserve} disabled={!!reason} className="btn-primary mt-4 w-full">
               {t("common.reserve")}
             </button>
             <p className="mt-2 text-center text-xs text-muted">{t("common.demoData")}</p>

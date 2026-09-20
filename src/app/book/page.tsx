@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getAccommodationById } from "@/lib/data";
-import { isPaymentDemoMode } from "@/lib/stripe";
+import { isPaymentDemoMode, stripePublishableKey } from "@/lib/stripe";
 import { BookingFlow } from "@/components/booking/BookingFlow";
 import type { BookingDraft } from "@/lib/types";
 
@@ -42,5 +42,5 @@ export default async function BookPage({
     children: Number(get("children")) || 0,
   };
 
-  return <BookingFlow stay={stay} draft={draft} demo={isPaymentDemoMode()} />;
+  return <BookingFlow stay={stay} draft={draft} demo={isPaymentDemoMode()} publishableKey={stripePublishableKey()} />;
 }
